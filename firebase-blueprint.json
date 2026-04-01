@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "displayName": { "type": "string", "description": "User's full name" },
+        "email": { "type": "string", "format": "email", "description": "User's email address" },
+        "photoURL": { "type": "string", "description": "User's profile picture URL" },
+        "walletBalance": { "type": "number", "description": "Current wallet balance" },
+        "role": { "type": "string", "enum": ["user", "admin"], "description": "User's system role" },
+        "savedSlotIds": { "type": "array", "items": { "type": "string" }, "description": "List of saved parking slot IDs" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp" }
+      },
+      "required": ["uid", "email"]
+    },
+    "ParkingSlot": {
+      "title": "ParkingSlot",
+      "description": "A parking spot listed on the platform",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique slot ID" },
+        "name": { "type": "string", "description": "Name of the spot" },
+        "address": { "type": "string", "description": "Full street address" },
+        "price": { "type": "number", "description": "Hourly rate" },
+        "rating": { "type": "number", "description": "Average user rating" },
+        "reviews": { "type": "number", "description": "Number of reviews" },
+        "type": { "type": "string", "description": "Type of parking (e.g., Underground, Covered)" },
+        "distance": { "type": "string", "description": "Distance from user (formatted string)" },
+        "images": { "type": "array", "items": { "type": "string" }, "description": "URLs of spot photos" },
+        "lat": { "type": "number", "description": "Latitude coordinate" },
+        "lng": { "type": "number", "description": "Longitude coordinate" },
+        "isVerified": { "type": "boolean", "description": "Whether the spot is verified" },
+        "ownerUid": { "type": "string", "description": "UID of the user who listed the spot" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Listing creation timestamp" },
+        "status": { "type": "string", "enum": ["ACTIVE", "DISABLED"], "description": "Status of the listing" },
+        "isAvailable": { "type": "boolean", "description": "Whether the spot is currently available" },
+        "slotNumber": { "type": "string", "description": "The specific slot number (e.g., G4)" },
+        "rows": { "type": "number", "description": "Number of rows in the parking layout" },
+        "cols": { "type": "number", "description": "Number of columns in the parking layout" },
+        "levels": { "type": "number", "description": "Number of levels in the parking layout" },
+        "amenities": { "type": "array", "items": { "type": "string" }, "description": "List of amenities" },
+        "position": { "type": "array", "items": { "type": "number" }, "description": "Coordinates [lat, lng]" }
+      },
+      "required": ["id", "name", "address", "price", "ownerUid"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "A booking for a parking slot",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique booking ID" },
+        "userId": { "type": "string", "description": "UID of the user who booked" },
+        "slotId": { "type": "string", "description": "ID of the parking slot listing" },
+        "slotNumber": { "type": "string", "description": "The specific slot number (e.g., G4)" },
+        "startTime": { "type": "string", "format": "date-time", "description": "Booking start time" },
+        "endTime": { "type": "string", "format": "date-time", "description": "Booking end time" },
+        "status": { "type": "string", "enum": ["PENDING", "CONFIRMED", "CANCELLED"], "description": "Booking status" },
+        "totalPrice": { "type": "number", "description": "Total price of the booking" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Booking creation timestamp" }
+      },
+      "required": ["id", "userId", "slotId", "slotNumber", "startTime", "endTime"]
+    },
+    "UserAddress": {
+      "title": "UserAddress",
+      "description": "Represents a saved address for a user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique address ID" },
+        "address": { "type": "string", "description": "The full address string." },
+        "addressDetails": { "type": "string", "description": "Specific details like floor or house number." },
+        "receiverName": { "type": "string", "description": "Name of the person receiving the delivery." },
+        "receiverPhone": { "type": "string", "description": "Phone number of the receiver." },
+        "addressType": { "type": "string", "enum": ["home", "work", "other"], "description": "The type of address." },
+        "lat": { "type": "number", "description": "Latitude of the location." },
+        "lng": { "type": "number", "description": "Longitude of the location." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the address was created." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "When the address was last updated." }
+      },
+      "required": ["address", "addressDetails", "receiverName", "receiverPhone", "addressType", "lat", "lng"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/users/{uid}/addresses/{addressId}": {
+      "schema": "UserAddress",
+      "description": "User's saved addresses"
+    },
+    "/slots/{slotId}": {
+      "schema": "ParkingSlot",
+      "description": "Parking slot listings"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "User bookings"
+    }
+  }
+}

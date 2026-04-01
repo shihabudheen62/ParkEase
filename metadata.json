@@ -1,0 +1,5 @@
+{
+  "name": "ParkEase",
+  "description": "A modern parking slot booking mobile application.",
+  "requestFramePermissions": ["geolocation"]
+}

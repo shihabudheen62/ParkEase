@@ -1,0 +1,183 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {uid}
+    // Fields:
+    //   - uid: string (required) - Firebase Auth UID
+    //   - displayName: string (optional) - User's full name
+    //   - email: string (required, email format) - User's email address
+    //   - photoURL: string (optional) - User's profile picture URL
+    //   - walletBalance: number (optional) - Current wallet balance
+    //   - role: string (enum: ['user', 'admin']) - User's system role
+    //   - createdAt: string (date-time) - Account creation timestamp
+    //
+    // Collection: slots
+    // Document ID: {slotId}
+    // Fields:
+    //   - id: string (required) - Unique slot ID
+    //   - name: string (required) - Name of the spot
+    //   - address: string (required) - Full street address
+    //   - price: number (required) - Hourly rate
+    //   - rating: number (optional) - Average user rating
+    //   - type: string (optional) - Type of parking
+    //   - distance: string (optional) - Distance from user
+    //   - images: list (optional) - URLs of spot photos
+    //   - lat: number (optional) - Latitude coordinate
+    //   - lng: number (optional) - Longitude coordinate
+    //   - isVerified: bool (optional) - Whether the spot is verified
+    //   - ownerUid: string (required) - UID of the user who listed the spot
+    //   - createdAt: string (date-time) - Listing creation timestamp
+    //
+    // Collection: users/{uid}/addresses
+    // Document ID: {addressId}
+    // Fields:
+    //   - address: string (required) - Full street address
+    //   - addressDetails: string (required) - Specific details like floor or house number
+    //   - receiverName: string (required) - Name of the person receiving the delivery
+    //   - receiverPhone: string (required) - Phone number of the receiver
+    //   - addressType: string (required, enum: ['home', 'work', 'other']) - Type of address
+    //   - lat: number (required) - Latitude coordinate
+    //   - lng: number (required) - Longitude coordinate
+    //   - createdAt: string (date-time) - Timestamp when address was saved
+    //   - updatedAt: string (date-time) - Timestamp when address was last updated
+    //
+    // Collection: bookings
+    // Document ID: {bookingId}
+    // Fields:
+    //   - id: string (required) - Unique booking ID
+    //   - userId: string (required) - UID of the user who booked
+    //   - slotId: string (required) - ID of the parking slot listing
+    //   - slotNumber: string (required) - The specific slot number (e.g., G4)
+    //   - startTime: string (date-time) - Booking start time
+    //   - endTime: string (date-time) - Booking end time
+    //   - status: string (enum: ['PENDING', 'CONFIRMED', 'CANCELLED']) - Booking status
+    //   - totalPrice: number (optional) - Total price of the booking
+    //   - createdAt: string (date-time) - Booking creation timestamp
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.ownerUid;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "shihabudheenca62@gmail.com" && request.auth.token.email_verified == true)); // Default admin
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'displayName', 'email', 'photoURL', 'walletBalance', 'role', 'savedSlotIds', 'createdAt']) &&
+             data.uid is string && data.uid.size() > 0 &&
+             data.email is string && isValidEmail(data.email) &&
+             (data.role in ['user', 'admin']) &&
+             (data.walletBalance is number) &&
+             (!('savedSlotIds' in data) || data.savedSlotIds is list);
+    }
+
+    function isValidSlot(data) {
+      return data.id is string &&
+             data.name is string &&
+             data.address is string &&
+             data.price is number &&
+             data.ownerUid is string && data.ownerUid == request.auth.uid &&
+             data.lat is number && data.lng is number &&
+             data.images is list && data.amenities is list && data.position is list &&
+             data.status is string && data.type is string &&
+             data.isAvailable is bool && data.isVerified is bool &&
+             data.rating is number && data.reviews is number &&
+             data.createdAt is string &&
+             (!('rows' in data) || data.rows is number) &&
+             (!('cols' in data) || data.cols is number) &&
+             (!('levels' in data) || data.levels is number);
+    }
+
+    function isValidBooking(data) {
+      return data.id is string &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.slotId is string &&
+             data.slotNumber is string &&
+             data.startTime is string &&
+             data.endTime is string &&
+             (data.status in ['PENDING', 'CONFIRMED', 'CANCELLED']) &&
+             (!('totalPrice' in data) || data.totalPrice is number) &&
+             data.createdAt is string;
+    }
+
+    function isValidAddress(data) {
+      return data.id is string &&
+             data.address is string && data.address.size() > 0 && data.address.size() < 500 &&
+             data.addressDetails is string && data.addressDetails.size() > 0 && data.addressDetails.size() < 500 &&
+             data.receiverName is string && data.receiverName.size() > 0 && data.receiverName.size() < 100 &&
+             data.receiverPhone is string && data.receiverPhone.size() > 0 && data.receiverPhone.size() < 20 &&
+             (data.addressType in ['home', 'work', 'other']) &&
+             data.lat is number && data.lng is number &&
+             (data.createdAt is string || data.updatedAt is string);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) && request.resource.data.role == 'user' || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) && request.resource.data.role == resource.data.role || isAdmin());
+
+      match /addresses/{addressId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidAddress(request.resource.data);
+        allow update: if isOwner(userId) && isValidAddress(request.resource.data);
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    match /slots/{slotId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidSlot(request.resource.data);
+      allow update: if isAuthenticated() && isValidSlot(request.resource.data) && (isDocOwner() || isAdmin());
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && isValidBooking(request.resource.data);
+      allow update: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin()) && isValidBooking(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
