@@ -34,8 +34,14 @@ const SlotDetails: React.FC<SlotDetailsProps> = ({ slot, onBack, onBookNow }) =>
   const { currencySymbol } = useCurrency();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const isSaved = profile?.savedSlotIds?.includes(slot.id) || false;
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scrollTop = e.currentTarget.scrollTop;
+    setIsScrolled(scrollTop > 100);
+  };
 
   const toggleSave = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -78,8 +84,32 @@ const SlotDetails: React.FC<SlotDetailsProps> = ({ slot, onBack, onBookNow }) =>
   };
 
   return (
-    <div className="flex flex-col h-full bg-white overflow-y-auto no-scrollbar">
+    <div 
+      className="flex flex-col h-full bg-white overflow-y-auto no-scrollbar"
+      onScroll={handleScroll}
+    >
       <div className="max-w-2xl mx-auto w-full flex flex-col min-h-full relative">
+        {/* Sticky Header - Appears on scroll */}
+        <AnimatePresence>
+          {isScrolled && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="sticky top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-gray-100"
+            >
+              <button 
+                onClick={onBack}
+                className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-900 active:scale-90 transition-transform"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <h1 className="text-lg font-black text-gray-900 tracking-tight">Spot Details</h1>
+              <div className="w-10" /> {/* Spacer */}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Header Image Section - Fixed height for visibility */}
         <div className="relative h-96 w-full bg-gray-200 overflow-hidden isolate flex-shrink-0 pb-12">
         <AnimatePresence initial={false} mode="popLayout">
@@ -107,14 +137,18 @@ const SlotDetails: React.FC<SlotDetailsProps> = ({ slot, onBack, onBookNow }) =>
           />
         </AnimatePresence>
 
-        <div className="absolute top-10 left-0 right-0 px-6 flex justify-between items-center z-30">
+        {/* Overlaid Header - Hidden when scrolled */}
+        <motion.div 
+          animate={{ opacity: isScrolled ? 0 : 1 }}
+          className="absolute top-10 left-0 right-0 px-6 flex justify-between items-center z-30 pointer-events-none"
+        >
           <button 
             onClick={onBack}
-            className="w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+            className="w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform pointer-events-auto"
           >
             <ChevronLeft className="w-6 h-6 text-gray-900" />
           </button>
-          <div className="flex gap-3">
+          <div className="flex gap-3 pointer-events-auto">
             <button className="w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
               <Share2 className="w-5 h-5 text-gray-900" />
             </button>
@@ -126,7 +160,7 @@ const SlotDetails: React.FC<SlotDetailsProps> = ({ slot, onBack, onBookNow }) =>
               <Heart className={`w-5 h-5 ${isSaved ? 'text-red-500 fill-red-500' : 'text-gray-900'}`} />
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Carousel Dots */}
         <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-2 z-30 bg-black/20 backdrop-blur-md px-4 py-2 rounded-full">

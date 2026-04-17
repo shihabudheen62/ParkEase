@@ -2,7 +2,7 @@ import React from 'react';
 import { BottomNavigation, BottomNavigationAction, Box } from '@mui/material';
 import { motion } from 'framer-motion';
 import { 
-  Explore, ExploreOutlined,
+  ExploreRounded as Explore, ExploreOutlined,
   Garage, GarageOutlined,
   CalendarToday, CalendarTodayOutlined,
   Person, PersonOutlined

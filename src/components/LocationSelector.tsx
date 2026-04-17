@@ -4,7 +4,7 @@ import {
   LocationOnRounded as MapPin, 
   SearchRounded as Search, 
   AddRounded as Plus, 
-  NavigationRounded as Navigation, 
+  NearMeRounded as Navigation, 
   HomeRounded as HomeIcon, 
   MoreHorizRounded as MoreHorizontal, 
   ShareRounded as Share2, 

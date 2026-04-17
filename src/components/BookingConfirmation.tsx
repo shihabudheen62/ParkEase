@@ -11,7 +11,8 @@ import {
   Clock,
   X,
   Maximize2,
-  Loader2
+  Loader2,
+  LayoutGrid
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Slot, Booking } from '../types';
@@ -36,7 +37,6 @@ interface BookingConfirmationProps {
 }
 
 const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ slot, onBack, onSuccess }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'entry' | 'exit'>('entry');
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
@@ -193,16 +193,6 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ slot, onBack,
     setIsModalOpen(true);
   };
 
-  const nextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const prevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
-
   const handlePaymentSuccess = async () => {
     try {
       const bookingData = {
@@ -272,7 +262,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ slot, onBack,
   };
 
   return (
-    <div className="flex flex-col h-full bg-white overflow-y-auto no-scrollbar pb-32">
+    <div className="flex flex-col h-full bg-white overflow-hidden">
       <DateTimeModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -283,128 +273,92 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ slot, onBack,
         initialMode={modalMode}
       />
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-white px-4 py-4 flex items-center justify-between border-b border-gray-50">
-        <button onClick={onBack} className="p-2 -ml-2">
-          <ChevronLeft className="w-6 h-6 text-gray-900" />
+      <div className="sticky top-0 z-50 bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100">
+        <button 
+          onClick={onBack}
+          className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-900 active:scale-90 transition-transform"
+        >
+          <ChevronLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-lg font-bold text-gray-900">Booking Details</h1>
+        <h1 className="text-lg font-black text-gray-900 tracking-tight">Confirm Booking</h1>
         <div className="w-10" /> {/* Spacer */}
       </div>
 
-      {/* Hero Image Slider Section */}
-      <div className="relative h-96 w-full bg-gray-100 overflow-hidden isolate flex-shrink-0 pb-12">
-        <AnimatePresence initial={false} mode="popLayout">
-          <motion.img 
-            key={currentImageIndex}
-            src={images[currentImageIndex]} 
-            alt={slot.name} 
-            initial={{ opacity: 0, x: 200 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -200 }}
-            transition={{ duration: 0.4, ease: "easeInOut" }}
-            className="w-full h-full object-cover absolute inset-0 z-0 cursor-grab active:cursor-grabbing"
-            referrerPolicy="no-referrer"
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.7}
-            onDragEnd={(_, info) => {
-              const threshold = 50;
-              if (info.offset.x < -threshold) {
-                nextImage({ stopPropagation: () => {} } as any);
-              } else if (info.offset.x > threshold) {
-                prevImage({ stopPropagation: () => {} } as any);
-              }
-            }}
-          />
-        </AnimatePresence>
-        
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none z-10" />
-        
-        {/* Verification Badge - Top Left */}
-        {slot.isVerified && (
-          <div className="absolute top-10 left-6 z-30">
-            <span className="bg-[#007AFF] text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg">
-              Verified Spot
-            </span>
-          </div>
-        )}
+      <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
+        <div className="max-w-2xl mx-auto w-full p-6 space-y-8">
+          {/* Booking Summary Card */}
+          <div className="bg-white rounded-[32px] border border-gray-100 p-6 shadow-sm space-y-6">
+            <div className="flex gap-4">
+              <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100">
+                <img 
+                  src={images[0]} 
+                  alt={slot.name}
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="flex-1 py-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    {slot.type}
+                  </span>
+                  {slot.isVerified && (
+                    <span className="bg-green-50 text-green-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      Verified
+                    </span>
+                  )}
+                </div>
+                <h2 className="text-xl font-black text-gray-900 leading-tight mb-1">{slot.name}</h2>
+                <div className="flex items-center gap-1 text-gray-500 text-sm">
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span className="line-clamp-1">{slot.address}</span>
+                </div>
+              </div>
+            </div>
 
-        {/* Carousel Dots - Matching SlotDetails style */}
-        {images.length > 1 && (
-          <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-2 z-30 bg-black/20 backdrop-blur-md px-4 py-2 rounded-full">
-            {images.map((_, index) => (
+            <div className="h-px bg-gray-100" />
+
+            {/* Selected Slot Info */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-900">
+                  <LayoutGrid className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Selected Slot</p>
+                  <p className="text-sm font-bold text-gray-900">{selectedSlotNumber || 'Not selected'}</p>
+                </div>
+              </div>
               <button 
-                key={index}
-                onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(index); }}
-                className="relative h-1.5 flex items-center"
+                onClick={() => setIsMapModalOpen(true)}
+                className="text-sm font-bold text-blue-600 hover:text-blue-700"
               >
-                <motion.div 
-                  animate={{
-                    width: index === currentImageIndex ? 20 : 6,
-                    backgroundColor: index === currentImageIndex ? "#FFFFFF" : "rgba(255, 255, 255, 0.4)"
-                  }}
-                  className="h-full rounded-full"
-                />
+                {selectedSlotNumber ? 'Change' : 'Select Slot'}
               </button>
-            ))}
-          </div>
-        )}
-
-        <div className="absolute bottom-20 left-6 right-6 space-y-2 pointer-events-none z-20">
-          <h2 className="text-2xl font-bold text-white leading-tight">
-            {slot.name}
-          </h2>
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-1.5 text-white/80 text-sm font-medium">
-              <MapPin className="w-4 h-4 text-[#007AFF]" />
-              <span>{slot.address}</span>
-            </div>
-            {/* Star Rating - Below Location */}
-            <div className="flex gap-0.5 mt-1">
-              {[1,2,3,4,5].map(i => (
-                <Star 
-                  key={i} 
-                  className={`w-3.5 h-3.5 ${i <= Math.round(slot.rating) ? 'text-orange-400 fill-orange-400' : 'text-white/30'}`} 
-                />
-              ))}
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content Card - Overlapping Hero */}
-      <div className="relative -mt-8 bg-white rounded-t-[40px] px-6 pt-8 space-y-8 z-20">
-        
-        {/* Action Buttons */}
-        <div className="grid grid-cols-3 gap-4">
-          <button 
-            onClick={handleNavigate}
-            className="flex flex-col items-center gap-2 p-4 bg-[#F0F7FF] rounded-2xl group active:scale-95 transition-transform"
-          >
-            <div className="w-10 h-10 bg-[#007AFF] rounded-xl flex items-center justify-center text-white">
-              <Navigation className="w-5 h-5 fill-current" />
-            </div>
-            <span className="text-xs font-bold text-gray-600">Navigate</span>
-          </button>
-          <button 
-            onClick={handleShare}
-            className="flex flex-col items-center gap-2 p-4 bg-[#F0F7FF] rounded-2xl group active:scale-95 transition-transform"
-          >
-            <div className="w-10 h-10 bg-[#007AFF] rounded-xl flex items-center justify-center text-white">
-              <Share2 className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-bold text-gray-600">Share Spot</span>
-          </button>
-          <button 
-            onClick={() => setIsMapModalOpen(true)}
-            className="flex flex-col items-center gap-2 p-4 bg-[#F0F7FF] rounded-2xl group active:scale-95 transition-transform"
-          >
-            <div className="w-10 h-10 bg-[#007AFF] rounded-xl flex items-center justify-center text-white">
-              <span className="text-sm font-black">{selectedSlotNumber || '?'}</span>
-            </div>
-            <span className="text-xs font-bold text-gray-600">Slot Map</span>
-          </button>
-        </div>
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-4">
+            <button 
+              onClick={handleNavigate}
+              className="flex items-center gap-3 p-4 bg-[#F0F7FF] rounded-2xl active:scale-95 transition-transform"
+            >
+              <div className="w-10 h-10 bg-[#007AFF] rounded-xl flex items-center justify-center text-white">
+                <MapPin className="w-5 h-5 fill-current" />
+              </div>
+              <span className="text-xs font-bold text-gray-700">Navigate</span>
+            </button>
+            <button 
+              onClick={handleShare}
+              className="flex items-center gap-3 p-4 bg-[#F0F7FF] rounded-2xl active:scale-95 transition-transform"
+            >
+              <div className="w-10 h-10 bg-[#007AFF] rounded-xl flex items-center justify-center text-white">
+                <Share2 className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-gray-700">Share Spot</span>
+            </button>
+          </div>
 
         {/* Duration & Entry */}
         <div className="space-y-4">
@@ -476,6 +430,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ slot, onBack,
           </div>
         </div>
 
+        </div>
       </div>
 
       {/* Fixed Confirm Button at Bottom */}

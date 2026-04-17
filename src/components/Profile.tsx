@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { Leaf } from 'lucide-react';
 import { 
   EditRounded as Pencil, 
-  EcoRounded as Leaf, 
   ChevronRightRounded as ChevronRight, 
   DirectionsCarRounded as Car, 
   CreditCardRounded as CreditCard, 

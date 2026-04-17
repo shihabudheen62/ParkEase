@@ -3,7 +3,7 @@ import {
   ChevronLeftRounded as ChevronLeft, 
   SearchRounded as Search, 
   LocationOnRounded as MapPin, 
-  NavigationRounded as Navigation, 
+  LocationOnRounded as Navigation, 
   HomeRounded as Home, 
   WorkRounded as Briefcase, 
   MoreHorizRounded as MoreHorizontal, 

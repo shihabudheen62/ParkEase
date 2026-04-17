@@ -252,7 +252,7 @@ const Bookings: React.FC<BookingsProps> = ({ setActiveTab }) => {
                           }}
                           className="flex-1 bg-white text-[#007AFF] py-4 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
                         >
-                          <NavIcon className="w-5 h-5 fill-current" />
+                          <MapPin className="w-5 h-5 fill-current" />
                           <span>Navigate</span>
                         </button>
                         <button className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 active:scale-[0.98] transition-transform">

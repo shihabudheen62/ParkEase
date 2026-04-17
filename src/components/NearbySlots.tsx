@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ExploreRounded as Compass, StarRounded as Star, ChevronRightRounded as ChevronRight } from '@mui/icons-material';
+import { ExploreRounded as Compass, StarRounded as Star, ChevronRightRounded as ChevronRight, ExploreOutlined, PlaceOutlined } from '@mui/icons-material';
 import { Slot } from '../types';
 import { useCurrency } from '../CurrencyContext';
 
@@ -65,8 +65,8 @@ const NearbySlots: React.FC<NearbySlotsProps> = ({ onSelectSlot, slots }) => {
                         <span className="text-[10px] font-bold text-gray-900">{slot.rating}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-1">
-                      <Compass className="w-3 h-3" />
+                    <div className="flex items-center gap-1 text-[12px] text-gray-400 mt-1">
+                      <PlaceOutlined className="w-3 h-3 text-[8px]" />
                       <span>{slot.distance} • {slot.type}</span>
                     </div>
                   </div>
@@ -85,7 +85,7 @@ const NearbySlots: React.FC<NearbySlotsProps> = ({ onSelectSlot, slots }) => {
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                <Compass className="w-8 h-8 text-gray-300" />
+                <ExploreOutlined className="w-8 h-8 text-gray-300" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">No slots found</h3>
               <p className="text-sm text-gray-400 max-w-[200px] mx-auto mt-1">

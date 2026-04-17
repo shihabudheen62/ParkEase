@@ -1,14 +1,11 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
-import path from "path";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import Stripe from "stripe";
-import dotenv from "dotenv";
+import "dotenv/config";
 
-dotenv.config();
-
-const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY) 
-  : null;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
@@ -24,6 +21,8 @@ async function startServer() {
   // Stripe PaymentIntent route
   app.post("/api/create-payment-intent", async (req, res) => {
     const { amount, currency = "inr" } = req.body;
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    const stripe = stripeKey ? new Stripe(stripeKey) : null;
 
     // Mock mode for demo purposes if Stripe is not configured
     if (!stripe) {
@@ -51,17 +50,26 @@ async function startServer() {
   });
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
+  // Default to production if NODE_ENV is not explicitly set to something else
+  const isDev = process.env.NODE_ENV === "development" || (!process.env.NODE_ENV && process.env.VITE_DEV === "true");
+  
+  if (isDev) {
+    console.log("Starting in DEVELOPMENT mode");
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    console.log("Starting in PRODUCTION mode");
+    const distPath = __dirname;
+    console.log(`Serving static files from: ${distPath}`);
+    
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      const indexPath = path.join(distPath, 'index.html');
+      res.sendFile(indexPath);
     });
   }
 
@@ -70,4 +78,7 @@ async function startServer() {
   });
 }
 
-startServer();
+startServer().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
+});
