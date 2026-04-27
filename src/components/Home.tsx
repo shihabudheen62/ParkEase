@@ -21,6 +21,7 @@ interface HomeProps {
   onSelectSlot: (slot: Slot) => void;
   initialTab?: string;
   onTabChange?: (tab: string) => void;
+  onLocationDrawerChange?: (isOpen: boolean) => void;
 }
 
 // Haversine formula to calculate distance between two points in km
@@ -36,7 +37,12 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 };
 
-const Home: React.FC<HomeProps> = ({ onSelectSlot, initialTab = 'explore', onTabChange }) => {
+const Home: React.FC<HomeProps> = ({ 
+  onSelectSlot, 
+  initialTab = 'explore', 
+  onTabChange,
+  onLocationDrawerChange
+}) => {
   const { user } = useAuth();
   const { setCurrencyByCountryCode } = useCurrency();
   const { 
@@ -302,6 +308,7 @@ const Home: React.FC<HomeProps> = ({ onSelectSlot, initialTab = 'explore', onTab
             currentAddress={currentAddress} 
             currentAddressType={currentAddressType}
             onAddressSelect={handleAddressSelect} 
+            onSheetStateChange={onLocationDrawerChange}
           />
 
           <NearbySlots 
@@ -320,14 +327,6 @@ const Home: React.FC<HomeProps> = ({ onSelectSlot, initialTab = 'explore', onTab
           {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} View Coming Soon
         </div>
       )}
-      
-      <Navigation 
-        activeTab={activeTab} 
-        setActiveTab={(tab) => {
-          setActiveTab(tab);
-          onTabChange?.(tab);
-        }} 
-      />
     </div>
   );
 };

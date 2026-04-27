@@ -312,8 +312,17 @@ const AddAddressForm: React.FC<AddAddressFormProps> = ({ onBack, onSave, initial
         });
         onSave({ ...addressData, id: newDoc.id });
       }
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}/addresses`);
+    } catch (err: any) {
+      console.error("Save error:", err);
+      // Attempt to parse Firestore error info if it's our JSON format
+      try {
+        const errJson = JSON.parse(err.message);
+        setError(`Failed to save: ${errJson.error}`);
+      } catch (e) {
+        setError(err.message || 'An error occurred while saving the address');
+      }
+      // Log for system diagnosis but don't re-throw to avoid crashing UI
+      handleFirestoreError(err, OperationType.WRITE, `users/${auth.currentUser.uid}/addresses`);
     } finally {
       setIsSaving(false);
     }
@@ -552,17 +561,30 @@ const AddAddressForm: React.FC<AddAddressFormProps> = ({ onBack, onSave, initial
               <div className="h-[1px] flex-1 bg-gray-100 ml-4" />
             </div>
             
-            <div className="flex items-center gap-4 p-4 bg-gray-50/50 border border-gray-100 rounded-2xl cursor-pointer active:bg-gray-100 transition-colors">
-              <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center flex-shrink-0 border border-gray-50">
-                <User className="w-5 h-5 text-gray-600" />
+            <div className="space-y-4">
+              <div className="relative">
+                <input 
+                  type="text"
+                  value={receiverName}
+                  onChange={(e) => setReceiverName(e.target.value)}
+                  placeholder="Receiver Name*"
+                  className="w-full bg-white border border-gray-200 rounded-2xl py-4 px-4 pl-12 text-sm font-medium focus:outline-none focus:border-[#007AFF] transition-colors"
+                />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <span className="absolute left-4 -top-2.5 px-1 bg-white text-[10px] font-bold text-gray-400">Receiver Name*</span>
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-gray-800 leading-tight">{receiverName}</p>
-                <p className="text-[11px] font-medium text-gray-500 mt-0.5">{receiverPhone}</p>
+
+              <div className="relative">
+                <input 
+                  type="text"
+                  value={receiverPhone}
+                  onChange={(e) => setReceiverPhone(e.target.value)}
+                  placeholder="Receiver Phone*"
+                  className="w-full bg-white border border-gray-200 rounded-2xl py-4 px-4 pl-12 text-sm font-medium focus:outline-none focus:border-[#007AFF] transition-colors"
+                />
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <span className="absolute left-4 -top-2.5 px-1 bg-white text-[10px] font-bold text-gray-400">Receiver Phone*</span>
               </div>
-              <button className="text-[10px] font-bold text-[#007AFF] bg-white px-3 py-1.5 rounded-lg shadow-sm border border-blue-50">
-                Edit
-              </button>
             </div>
           </div>
 

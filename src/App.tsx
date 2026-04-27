@@ -27,6 +27,7 @@ const AppContent: React.FC = () => {
   const [currentView, setCurrentView] = useState<'home' | 'details' | 'confirmation'>('home');
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [hideNav, setHideNav] = useState(false);
+  const [isLocationDrawerOpen, setIsLocationDrawerOpen] = useState(false);
 
   useEffect(() => {
     setupLeafletIcons();
@@ -89,7 +90,10 @@ const AppContent: React.FC = () => {
                     exit={{ opacity: 0, x: -20 }}
                     className="h-full w-full"
                   >
-                    <Home onSelectSlot={handleSelectSlot} />
+                    <Home 
+                      onSelectSlot={handleSelectSlot} 
+                      onLocationDrawerChange={setIsLocationDrawerOpen}
+                    />
                   </motion.div>
                 ) : currentView === 'details' ? (
                   <motion.div
@@ -164,7 +168,7 @@ const AppContent: React.FC = () => {
       </div>
 
       {/* Global Bottom Navigation */}
-      {!(mainView === 'explore' && currentView !== 'home') && !hideNav && (
+      {!(mainView === 'explore' && currentView !== 'home') && !hideNav && !isLocationDrawerOpen && (
         <Navigation activeTab={mainView} setActiveTab={(tab: any) => {
           setMainView(tab);
           if (tab === 'explore') setCurrentView('home');

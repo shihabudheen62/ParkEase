@@ -106,8 +106,7 @@ service cloud.firestore {
     }
 
     function isValidSlot(data) {
-      return data.id is string &&
-             data.name is string &&
+      return data.name is string &&
              data.address is string &&
              data.price is number &&
              data.ownerUid is string && data.ownerUid == request.auth.uid &&
@@ -115,34 +114,25 @@ service cloud.firestore {
              data.images is list && data.amenities is list && data.position is list &&
              data.status is string && data.type is string &&
              data.isAvailable is bool && data.isVerified is bool &&
-             data.rating is number && data.reviews is number &&
-             data.createdAt is string &&
-             (!('rows' in data) || data.rows is number) &&
-             (!('cols' in data) || data.cols is number) &&
-             (!('levels' in data) || data.levels is number);
+             data.rating is number && data.reviews is number;
     }
 
     function isValidBooking(data) {
-      return data.id is string &&
-             data.userId is string && data.userId == request.auth.uid &&
+      return data.userId is string && data.userId == request.auth.uid &&
              data.slotId is string &&
              data.slotNumber is string &&
              data.startTime is string &&
              data.endTime is string &&
-             (data.status in ['PENDING', 'CONFIRMED', 'CANCELLED']) &&
-             (!('totalPrice' in data) || data.totalPrice is number) &&
-             data.createdAt is string;
+             (data.status in ['PENDING', 'CONFIRMED', 'CANCELLED']);
     }
 
     function isValidAddress(data) {
-      return data.id is string &&
-             data.address is string && data.address.size() > 0 && data.address.size() < 500 &&
+      return data.address is string && data.address.size() > 0 && data.address.size() < 500 &&
              data.addressDetails is string && data.addressDetails.size() > 0 && data.addressDetails.size() < 500 &&
              data.receiverName is string && data.receiverName.size() > 0 && data.receiverName.size() < 100 &&
              data.receiverPhone is string && data.receiverPhone.size() > 0 && data.receiverPhone.size() < 20 &&
              (data.addressType in ['home', 'work', 'other']) &&
-             data.lat is number && data.lng is number &&
-             (data.createdAt is string || data.updatedAt is string);
+             data.lat is number && data.lng is number;
     }
 
     // ===============================================================

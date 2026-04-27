@@ -23,11 +23,16 @@ interface LocationSelectorProps {
   currentAddress: string;
   currentAddressType: string;
   onAddressSelect: (address: string, type?: string, lat?: number, lng?: number) => void;
+  onSheetStateChange?: (isOpen: boolean) => void;
 }
 
-const LocationSelector: React.FC<LocationSelectorProps> = ({ currentAddress, currentAddressType, onAddressSelect }) => {
+const LocationSelector: React.FC<LocationSelectorProps> = ({ currentAddress, currentAddressType, onAddressSelect, onSheetStateChange }) => {
   const { userLocation } = useLocation();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  useEffect(() => {
+    onSheetStateChange?.(isSheetOpen);
+  }, [isSheetOpen, onSheetStateChange]);
   const [isAddAddressOpen, setIsAddAddressOpen] = useState(false);
   const [addresses, setAddresses] = useState<any[]>([]);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
