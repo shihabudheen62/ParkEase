@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ChevronLeftRounded as ChevronLeft, 
   ShareRounded as Share2, 
@@ -11,11 +11,12 @@ import {
   AutorenewRounded as RefreshCcw, 
   ChatRounded as MessageSquare,
   StarRounded as Star,
-  ChevronRightRounded as ChevronRight
+  ChevronRightRounded as ChevronRight,
+  PersonRounded as User
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
-import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, arrayRemove, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { Slot } from '../types';
 import { createPinIcon } from '../constants';
 import { useAuth } from '../AuthContext';
@@ -35,8 +36,40 @@ const SlotDetails: React.FC<SlotDetailsProps> = ({ slot, onBack, onBookNow }) =>
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [hostProfile, setHostProfile] = useState<any>(null);
+  const [bookingCount, setBookingCount] = useState(0);
 
   const isSaved = profile?.savedSlotIds?.includes(slot.id) || false;
+
+  useEffect(() => {
+    const fetchHostData = async () => {
+      if (!slot.ownerUid) return;
+      try {
+        const hostDoc = await getDoc(doc(db, 'users', slot.ownerUid));
+        if (hostDoc.exists()) {
+          setHostProfile(hostDoc.data());
+        }
+      } catch (error) {
+        console.error("Error fetching host data:", error);
+      }
+    };
+
+    const fetchBookingCount = async () => {
+      try {
+        const bookingsQuery = query(
+          collection(db, 'bookings'),
+          where('slotId', '==', slot.id)
+        );
+        const snapshot = await getDocs(bookingsQuery);
+        setBookingCount(snapshot.size);
+      } catch (error) {
+        console.error("Error fetching booking count:", error);
+      }
+    };
+
+    fetchHostData();
+    fetchBookingCount();
+  }, [slot.id, slot.ownerUid]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = e.currentTarget.scrollTop;
@@ -265,6 +298,28 @@ const SlotDetails: React.FC<SlotDetailsProps> = ({ slot, onBack, onBookNow }) =>
           </div>
         </div>
 
+        {/* Booking Stats Section */}
+        <div className="bg-[#F0F7FF] p-5 rounded-3xl flex items-center justify-between border border-blue-50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#007AFF] shadow-sm">
+              <User className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">Spot Popularity</h3>
+              <p className="text-[11px] text-[#007AFF] font-bold">
+                {bookingCount} {bookingCount === 1 ? 'Person' : 'People'} booked this venue
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</div>
+            <div className="text-sm font-bold text-green-500 flex items-center gap-1 justify-end">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              Booking Open
+            </div>
+          </div>
+        </div>
+
         {/* Reviews */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
@@ -295,14 +350,16 @@ const SlotDetails: React.FC<SlotDetailsProps> = ({ slot, onBack, onBookNow }) =>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full overflow-hidden bg-blue-100">
               <img 
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus" 
+                src={hostProfile?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${hostProfile?.displayName || 'Host'}`} 
                 alt="Host" 
                 className="w-full h-full object-cover"
               />
             </div>
             <div>
-              <h4 className="font-bold text-gray-900 text-sm">Hosted by Marcus</h4>
-              <p className="text-[10px] text-gray-400">Pro Host • 482 Bookings</p>
+              <h4 className="font-bold text-gray-900 text-sm">Hosted by {hostProfile?.displayName || 'Loading...'}</h4>
+              <p className="text-[10px] text-gray-400">
+                Posted by {hostProfile?.displayName || '...'} • Verified Host
+              </p>
             </div>
           </div>
           <button className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#007AFF]">
