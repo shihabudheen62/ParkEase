@@ -345,7 +345,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ slot, onBack,
               className="flex items-center gap-3 p-4 bg-[#F0F7FF] rounded-2xl active:scale-95 transition-transform"
             >
               <div className="w-10 h-10 bg-[#007AFF] rounded-xl flex items-center justify-center text-white">
-                <MapPin className="w-5 h-5 fill-current" />
+                <Navigation className="w-5 h-5" />
               </div>
               <span className="text-xs font-bold text-gray-700">Navigate</span>
             </button>
